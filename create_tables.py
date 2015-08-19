@@ -7,42 +7,13 @@
 #   run CREATE EXTENSION postgis; too.
 
 import argparse, psycopg2, psycopg2.extensions, psycopg2.extras, ppygis
-
-# Map of field name -> postgres datatype. Contains everything we want to save.
-# TODO: if you change this, also change the tweet_to_insert_string method in
-# scrape_twitter_in_area.py.
-data_types = {
-    'contributors': 'text', # TODO does this work?
-    'coordinates': 'Point',
-    'created_at': 'timestamp',
-    'entities': 'hstore', 
-    'favorite_count': 'integer',
-    # |favorited| only makes sense if there's an authenticated user.
-    'filter_level': 'text',
-    # geo skipped, b/c it's deprecated
-    'lang': 'text',
-    'id': 'bigint primary key',
-    'id_str': 'text',
-    'in_reply_to_screen_name': 'text',
-    'in_reply_to_status_id': 'bigint',
-    'in_reply_to_status_id_str': 'text',
-    'in_reply_to_user_id': 'bigint',
-    'in_reply_to_user_id_str': 'text',
-    'place': 'hstore',
-    'retweet_count': 'integer',
-    # |retweeted| only make sense if there's an authenticated user.
-    'source': 'text',
-    'text': 'text NOT NULL',
-    # |truncated| is obsolete; Twitter now rejects long tweets instead of truncating.
-    'twitter_user': 'hstore', # was |user| in Twitter API.
-    'user_screen_name': 'text NOT NULL', # added this
-}
+import utwils
 
 def create_table(table_name, pg_cur, psql_conn):
     pg_cur.execute("DROP TABLE IF EXISTS " + table_name + ";")
     psql_conn.commit()
     create_table_str = "create table " + table_name + "("
-    for key, value in sorted(data_types.iteritems()):
+    for key, value in sorted(utwils.data_types.iteritems()):
         if key not in ['coordinates']: # create that coords column separately.
             create_table_str += key + ' ' + value + ', '
     create_table_str = create_table_str[:-2] + ");"
@@ -77,10 +48,7 @@ if __name__=='__main__':
     psycopg2.extras.register_hstore(psql_conn)
     pg_cur = psql_conn.cursor()
 
-    TABLE_NAMES=['tweet_austin', 'tweet_chicago', 'tweet_cleveland',
-        'tweet_dallas', 'tweet_detroit', 'tweet_houston', 'tweet_london',
-        'tweet_miami', 'tweet_minneapolis', 'tweet_ny', 'tweet_pgh',
-        'tweet_sanantonio', 'tweet_seattle', 'tweet_sf', 'tweet_whitehouse']
+    TABLE_NAMES = ['tweet_' + city for city in utwils.CITY_LOCATIONS.keys()]
 
     if args.create_all:
         print "About to dump and recreate all tables: %s. Enter to continue, Ctrl-C to quit." % str(TABLE_NAMES)
@@ -91,6 +59,7 @@ if __name__=='__main__':
             print "Ok, seems like you\'re not sure. Doing nothing. Whew! Disaster averted."
             exit(0)
         for table_name in TABLE_NAMES:
+            print "Creating: " + str(table_name)
             create_table(table_name, pg_cur, psql_conn)
             print "Done creating table, now creating indices"
             create_indices(table_name, pg_cur, psql_conn)
@@ -99,9 +68,10 @@ if __name__=='__main__':
     elif args.table_name:
         print "About to dump and recreate %s. Enter to continue, Ctrl-C to quit." % args.table_name
         raw_input()
+        print "Creating: " + str(table_name)
         create_table(args.table_name, pg_cur, psql_conn)
         print "Done creating table, now creating indices"
         create_indices(args.table_name, pg_cur, psql_conn)
         print "Done creating indices"
     else:
-        print "No options selected, doing nothing."
+        print "No options selected, doing nothing. Try --create_all or --table_name"
