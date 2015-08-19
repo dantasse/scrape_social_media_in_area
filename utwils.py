@@ -2,7 +2,7 @@
 
 # Utilities for working with Twitter.
 
-import csv, collections, datetime, pytz
+import csv, collections, datetime, pytz, ppygis
 
 month_map = {'Jan': 1, 'Feb': 2, 'Mar':3, 'Apr':4, 'May':5, 'Jun':6, 'Jul':7, 
     'Aug':8,  'Sep': 9, 'Oct':10, 'Nov': 11, 'Dec': 12}
@@ -39,7 +39,7 @@ def tweet_to_insert_string(tweet, table, psql_cursor):
     lat = tweet['coordinates']['coordinates'][1]
     lon = tweet['coordinates']['coordinates'][0]
     coordinates = ppygis.Point(lon, lat, srid=4326)
-    created_at = utwils.parse_date(tweet['created_at'])
+    created_at = parse_date(tweet['created_at'])
     hstore_user = make_hstore(tweet['user'])
     hstore_place = make_hstore(tweet['place'])
     hstore_entities = make_hstore(tweet['entities'])
