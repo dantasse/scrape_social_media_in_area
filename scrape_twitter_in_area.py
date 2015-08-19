@@ -72,6 +72,11 @@ class MyStreamer(TwythonStreamer):
         if status_code == 420: # "Enhance your calm" aka rate-limit
             print "Rate limit, will try again."
             time.sleep(3)
+        elif status_code == 401: # "Unauthorized": maybe the IP is blocked
+            # for an arbitrarily large amount of time due to too many
+            # connections. 
+            print "Unauthorized; sleeping for an hour."
+            time.sleep(60*60)
         self.disconnect() 
 
     # Given a tweet from the Twitter API, saves it to Postgres DB table |table|.
