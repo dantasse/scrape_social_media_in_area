@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-# Every so often (TBD), takes a food, messes its name up, grabs an image of
-# that food, and makes a meme with the misspelled word, posts it to Twitter.
+# Gets data from the twitter API in a given region.
 
-import argparse, random, ConfigParser, os, time, datetime, ppygis, pytz, traceback, json
+import argparse, random, ConfigParser, os, time, datetime, pytz, traceback, json
 import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time, utwils
 from collections import defaultdict
 from twython import TwythonStreamer
