@@ -3,8 +3,8 @@
 # Every so often (TBD), takes a food, messes its name up, grabs an image of
 # that food, and makes a meme with the misspelled word, posts it to Twitter.
 
-import argparse, random, ConfigParser, os, time, datetime, ppygis, pytz, traceback
-import psycopg2, psycopg2.extensions
+import argparse, random, ConfigParser, os, time, datetime, ppygis, pytz, traceback, json
+import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time
 from collections import defaultdict
 from twython import TwythonStreamer
 import twython.exceptions
@@ -49,7 +49,7 @@ def parse_date(d):
 # Argument: a tweet JSON object and a table string name to insert into.
 # Returns: a string starting with "INSERT..." that you can run to insert this
 # tweet into a Postgres database.
-def tweet_to_insert_string(tweet, table):
+def tweet_to_insert_string(tweet, table, psql_cursor):
     lat = tweet['coordinates']['coordinates'][1]
     lon = tweet['coordinates']['coordinates'][0]
     coordinates = ppygis.Point(lon, lat, srid=4326)
@@ -64,7 +64,7 @@ def tweet_to_insert_string(tweet, table):
     if 'lang' not in tweet:
         tweet['lang'] = ''
 
-    insert_str = pg_cur.mogrify("INSERT INTO " + table + "(contributors, " +
+    insert_str = psql_cursor.mogrify("INSERT INTO " + table + "(contributors, " +
             "coordinates, created_at, entities, favorite_count, filter_level, " +
             "lang, id, id_str, in_reply_to_screen_name, in_reply_to_status_id, " +
             "in_reply_to_status_id_str, in_reply_to_user_id, in_reply_to_user_id_str, " +
@@ -81,6 +81,7 @@ def tweet_to_insert_string(tweet, table):
 
 # Map of field name -> postgres datatype. Contains everything we want to save.
 # TODO: if you change this, also change the tweet_to_insert_string method below.
+# TODO refactor this into a common file with the other data_types.
 data_types = {
     # _id skipped; it's from mongodb. id (no _) works, and ensures no duplicate tweets.
     'contributors': 'text', # TODO does this work?
@@ -120,78 +121,85 @@ class MyStreamer(TwythonStreamer):
     psql_connection = None
     psql_cursor = None
     psql_table = None
-    buffer = ''
+    city_name = ''
+    oauth_keys = {}
  
-    def __init__(psql_conn, table_name):
+    # c = consumer, at = access_token
+    def __init__(self, oauth_keys, psql_conn, city_name):
+        self.oauth_keys = oauth_keys
         self.psql_connection = psql_conn
+        self.city_name = city_name
+
+        keys_to_use_index = random.randint(0, len(oauth_keys)-1)
+        print "Connecting with keys: " + str(keys_to_use_index)
+        keys_to_use = oauth_keys[keys_to_use_index]
+        TwythonStreamer.__init__(self,
+            keys_to_use['consumer_key'], keys_to_use['consumer_secret'],
+            keys_to_use['access_token_key'], keys_to_use['access_token_secret'])
+        
         self.psql_cursor = self.psql_connection.cursor()
-        self.psql_table = table_name
+        self.psql_table = 'tweet_' + city_name
         psycopg2.extras.register_hstore(self.psql_connection)
+        self.min_lon, self.min_lat, self.max_lon, self.max_lat =\
+            [float(s.strip()) for s in CITY_LOCATIONS[city_name]['locations'].split(',')]
 
     def on_success(self, data):
-        print data
-        if 'text' in data:
-            print data['text'].encode('utf-8')
-        self.buffer += data
-        if data.endswith('\r\n') and self.buffer.strip():
-            # complete message received
-            message = json.loads(self.buffer)
-            self.buffer = ''
-            msg = ''
-            if message.get('limit'):
-                log('Rate limiting caused us to miss %s tweets' % (message['limit'].get('track')))
-            elif message.get('disconnect'):
-                raise Exception('Got disconnect: %s' % message['disconnect'].get('reason'))
-            elif message.get('warning'):
-                log('Got warning: %s' % message['warning'].get('message'))
-            elif message['coordinates'] == None:
-                pass # message with no actual coordinates, just a bounding box
-            else:
-                lon = message['coordinates']['coordinates'][0]
-                lat = message['coordinates']['coordinates'][1]
-                if lon >= self.min_lon and lon <= self.max_lon and \
-                        lat >= self.min_lat and lat <= self.max_lat:
-                    # db[self.tweet_col].insert(dict(message))
-                    self.save_to_postgres(dict(message))
-                    log('Got tweet with text: %s' % message.get('text').encode('utf-8'))
-                    # TODO save foursquare data to its own table
-                    # self.save_foursquare_data_if_present(message)
+        str_data = str(data)
+        message = ast.literal_eval(str_data)
+        if message.get('limit'):
+            log('Rate limiting caused us to miss %s tweets' % (message['limit'].get('track')))
+        elif message.get('disconnect'):
+            raise Exception('Got disconnect: %s' % message['disconnect'].get('reason'))
+        elif message.get('warning'):
+            log('Got warning: %s' % message['warning'].get('message'))
+        elif message['coordinates'] == None:
+            pass # message with no actual coordinates, just a bounding box
+        else:
+            # Check to make sure the point is actually in the bbox.
+            lon = message['coordinates']['coordinates'][0]
+            lat = message['coordinates']['coordinates'][1]
+            if lon >= self.min_lon and lon <= self.max_lon and \
+                    lat >= self.min_lat and lat <= self.max_lat:
+                self.save_to_postgres(dict(message))
+                print 'Got tweet: %s' % message.get('text').encode('utf-8')
+                # TODO save foursquare data to its own table
+                # self.save_foursquare_data_if_present(message)
 
 
     def on_error(self, status_code, data):
-        print status_code
+        print "Error: " + str(status_code)
         print data
+        if status_code == 420: # "Enhance your calm" aka rate-limit
+            print "Rate limit, will try again."
+            time.sleep(3)
+        self.disconnect() 
 
     # Given a tweet from the Twitter API, saves it to Postgres DB table |table|.
     def save_to_postgres(self, tweet):
-        insert_str = tweet_to_insert_string(tweet, self.psql_table)
+        insert_str = tweet_to_insert_string(tweet, self.psql_table, self.psql_cursor)
         try:
-            self.pg_cur.execute(insert_str)
-            self.psql_conn.commit()
+            self.psql_cursor.execute(insert_str)
+            self.psql_connection.commit()
        
         except Exception as e:
             print "Error running this command: %s" % insert_str
             traceback.print_exc()
             traceback.print_stack()
-            self.psql_conn.rollback() # just ignore the error
+            self.psql_connection.rollback() # just ignore the error
             # because, whatever, we miss one tweet
-
-
-def post_tweet(image, fud):
-    # TODO update this to use upload_media and then a separate post instead.
-    twitter.update_status_with_media(media=image_io, status='')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--foods_file', default='foods.txt')
+    parser.add_argument('--city', required=True, choices=CITY_LOCATIONS.keys())
     args = parser.parse_args()
 
     psql_conn = psycopg2.connect("dbname='tweet'")
     psycopg2.extras.register_hstore(psql_conn)
-    pg_cur = psql_conn.cursor()
 
-    keys = OAUTH_KEYS[0]
-
-    stream = MyStreamer(keys['consumer_key'], keys['consumer_secret'],
-        keys['access_token_key'], keys['access_token_secret'])
-    stream.statuses.filter(locations=[-122.75,36.8,-121.75,37.8])
+    sleep_time = 0
+    while True:
+        stream = MyStreamer(OAUTH_KEYS, psql_conn, args.city)
+        stream.statuses.filter(locations=CITY_LOCATIONS[args.city]['locations'])
+        print "Sleeping for %d seconds." % sleep_time
+        time.sleep(sleep_time)
+        sleep_time += 1
