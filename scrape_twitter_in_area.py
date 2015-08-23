@@ -47,11 +47,11 @@ class MyStreamer(TwythonStreamer):
         str_data = str(data)
         message = ast.literal_eval(str_data)
         if message.get('limit'):
-            log('Rate limiting caused us to miss %s tweets' % (message['limit'].get('track')))
+            print 'Rate limiting caused us to miss %s tweets' % (message['limit'].get('track'))
         elif message.get('disconnect'):
             raise Exception('Got disconnect: %s' % message['disconnect'].get('reason'))
         elif message.get('warning'):
-            log('Got warning: %s' % message['warning'].get('message'))
+            print 'Got warning: %s' % message['warning'].get('message')
         elif message['coordinates'] == None:
             pass # message with no actual coordinates, just a bounding box
         else:
