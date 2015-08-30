@@ -6,6 +6,12 @@ scrape_tweets_in_area.py: the main thing. Run this with --city=(city name)
 and it'll listen to the Twitter streaming endpoint for a small bounding box
 around that city (defined beforehand).
 
+notify_if_broken.py: sends an email if no data has been added to each table in
+the database in 24 hours. (run via cron.)
+
+print_table_counts.py: prints out how many items are in each table. (run via
+cron to make a log of sorts.)
+
 create_tables.py: if you're starting on a new computer, this can help you
 set up the database. Some basic instructions included in the top comments in
 this file too.
