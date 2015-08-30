@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Emails us if we haven't received any Tweets, Instagrams, or Flickrs in a day.
 # Email addresses (from and to) given in config.txt.
 
