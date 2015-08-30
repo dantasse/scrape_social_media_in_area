@@ -6,6 +6,9 @@ scrape_tweets_in_area.py: the main thing. Run this with --city=(city name)
 and it'll listen to the Twitter streaming endpoint for a small bounding box
 around that city (defined beforehand).
 
+scrape_instagram_in_area.py: the same, but for instagram. But limited to
+Pittsburgh, so far.
+
 notify_if_broken.py: sends an email if no data has been added to each table in
 the database in 24 hours. (run via cron.)
 
@@ -16,5 +19,7 @@ create_tables.py: if you're starting on a new computer, this can help you
 set up the database. Some basic instructions included in the top comments in
 this file too.
 
-utwils.py: common functions used in more than one of the above files.
+utils.py: common functions used in more than one of the above files.
 
+crontab: my crontab on Domo (our EC2 machine) that runs a couple of the above
+daily.

@@ -3,7 +3,7 @@
 # Gets data from the twitter API in a given region.
 
 import argparse, random, ConfigParser, os, time, datetime, pytz, traceback, json
-import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time, utwils
+import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time, utils
 from collections import defaultdict
 from twython import TwythonStreamer
 import twython.exceptions
@@ -41,7 +41,7 @@ class MyStreamer(TwythonStreamer):
         self.psql_table = 'tweet_' + city_name
         psycopg2.extras.register_hstore(self.psql_connection)
         self.min_lon, self.min_lat, self.max_lon, self.max_lat =\
-            [float(s.strip()) for s in utwils.CITY_LOCATIONS[city_name]['locations'].split(',')]
+            [float(s.strip()) for s in utils.CITY_LOCATIONS[city_name]['locations'].split(',')]
 
     def on_success(self, data):
         str_data = str(data)
@@ -81,7 +81,7 @@ class MyStreamer(TwythonStreamer):
 
     # Given a tweet from the Twitter API, saves it to Postgres DB table |table|.
     def save_to_postgres(self, tweet):
-        insert_str = utwils.tweet_to_insert_string(tweet, self.psql_table, self.psql_cursor)
+        insert_str = utils.tweet_to_insert_string(tweet, self.psql_table, self.psql_cursor)
         try:
             self.psql_cursor.execute(insert_str)
             self.psql_connection.commit()
@@ -95,7 +95,7 @@ class MyStreamer(TwythonStreamer):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--city', required=True, choices=utwils.CITY_LOCATIONS.keys())
+    parser.add_argument('--city', required=True, choices=utils.CITY_LOCATIONS.keys())
     args = parser.parse_args()
 
     psql_conn = psycopg2.connect("dbname='tweet'")
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     sleep_time = 0
     while True:
         stream = MyStreamer(OAUTH_KEYS, psql_conn, args.city)
-        stream.statuses.filter(locations=utwils.CITY_LOCATIONS[args.city]['locations'])
+        stream.statuses.filter(locations=utils.CITY_LOCATIONS[args.city]['locations'])
         print "Sleeping for %d seconds." % sleep_time
         time.sleep(sleep_time)
         sleep_time += 1

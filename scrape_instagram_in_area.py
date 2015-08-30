@@ -5,7 +5,7 @@
 # TODO: generalize this to take an arbitrary area
 
 import requests, json, time, sys, ConfigParser, traceback
-import utwils, psycopg2, psycopg2.extensions, psycopg2.extras
+import utils, psycopg2, psycopg2.extensions, psycopg2.extras
 
 # coordinates in Twitter scraper: lower left (40.241667, -80.2),
 # upper right (40.641667, -79.8)
@@ -102,7 +102,7 @@ while True:
                 # Rename id to _id b/c that's what load_instagrams_into_postgres takes
                 media['_id'] = id
                 del media['id']
-                insert_str = utwils.instagram_to_insert_string(media, 'instagram_pgh')
+                insert_str = utils.instagram_to_insert_string(media, 'instagram_pgh')
                 try:
                     pg_cur.execute(insert_str)
                     psql_conn.commit()

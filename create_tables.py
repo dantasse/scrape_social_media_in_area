@@ -7,13 +7,13 @@
 #   run CREATE EXTENSION postgis; too.
 
 import argparse, psycopg2, psycopg2.extensions, psycopg2.extras, ppygis
-import utwils
+import utils
 
 def create_tweet_table(table_name, pg_cur, psql_conn):
     pg_cur.execute("DROP TABLE IF EXISTS " + table_name + ";")
     psql_conn.commit()
     create_table_str = "create table " + table_name + "("
-    for key, value in sorted(utwils.twitter_data_types.iteritems()):
+    for key, value in sorted(utils.twitter_data_types.iteritems()):
         if key not in ['coordinates']: # create that coords column separately.
             create_table_str += key + ' ' + value + ', '
     create_table_str = create_table_str[:-2] + ");"
@@ -27,7 +27,7 @@ def create_instagram_table(table_name, pg_cur, psql_conn):
     pg_cur.execute("DROP TABLE IF EXISTS " + table_name + ";")
     psql_conn.commit()
     create_table_str = "create table " + table_name + "("
-    for key, value in sorted(utwils.instagram_data_types.iteritems()):
+    for key, value in sorted(utils.instagram_data_types.iteritems()):
         if key not in ['coordinates']: # create that coords column separately.
             create_table_str += key + ' ' + value + ', '
     create_table_str = create_table_str[:-2] + ");"
@@ -64,7 +64,7 @@ if __name__=='__main__':
     psycopg2.extras.register_hstore(psql_conn)
     pg_cur = psql_conn.cursor()
 
-    TWEET_TABLE_NAMES = ['tweet_' + city for city in utwils.CITY_LOCATIONS.keys()]
+    TWEET_TABLE_NAMES = ['tweet_' + city for city in utils.CITY_LOCATIONS.keys()]
     IG_TABLE_NAMES = ['instagram_pgh'] # TODO update if we get more cities
 
     if args.create_all:
