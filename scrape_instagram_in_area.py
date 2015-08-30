@@ -102,7 +102,7 @@ while True:
                 # Rename id to _id b/c that's what load_instagrams_into_postgres takes
                 media['_id'] = id
                 del media['id']
-                insert_str = utils.instagram_to_insert_string(media, 'instagram_pgh')
+                insert_str = utils.instagram_to_insert_string(media, 'instagram_pgh', pg_cur)
                 try:
                     pg_cur.execute(insert_str)
                     psql_conn.commit()
