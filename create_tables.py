@@ -9,11 +9,25 @@
 import argparse, psycopg2, psycopg2.extensions, psycopg2.extras, ppygis
 import utwils
 
-def create_table(table_name, pg_cur, psql_conn):
+def create_tweet_table(table_name, pg_cur, psql_conn):
     pg_cur.execute("DROP TABLE IF EXISTS " + table_name + ";")
     psql_conn.commit()
     create_table_str = "create table " + table_name + "("
-    for key, value in sorted(utwils.data_types.iteritems()):
+    for key, value in sorted(utwils.twitter_data_types.iteritems()):
+        if key not in ['coordinates']: # create that coords column separately.
+            create_table_str += key + ' ' + value + ', '
+    create_table_str = create_table_str[:-2] + ");"
+
+    pg_cur.execute(create_table_str)
+    psql_conn.commit()
+    pg_cur.execute("select addgeometrycolumn('" + table_name + "', 'coordinates', 4326, 'point', 2)")
+    psql_conn.commit()
+
+def create_instagram_table(table_name, pg_cur, psql_conn):
+    pg_cur.execute("DROP TABLE IF EXISTS " + table_name + ";")
+    psql_conn.commit()
+    create_table_str = "create table " + table_name + "("
+    for key, value in sorted(utwils.instagram_data_types.iteritems()):
         if key not in ['coordinates']: # create that coords column separately.
             create_table_str += key + ' ' + value + ', '
     create_table_str = create_table_str[:-2] + ");"
@@ -60,7 +74,7 @@ if __name__=='__main__':
             exit(0)
         for table_name in TABLE_NAMES:
             print "Creating: " + str(table_name)
-            create_table(table_name, pg_cur, psql_conn)
+            create_tweet_table(table_name, pg_cur, psql_conn)
             print "Done creating table, now creating indices"
             create_indices(table_name, pg_cur, psql_conn)
             print "Done creating indices"
@@ -69,7 +83,7 @@ if __name__=='__main__':
         print "About to dump and recreate %s. Enter to continue, Ctrl-C to quit." % args.table_name
         raw_input()
         print "Creating: " + str(table_name)
-        create_table(args.table_name, pg_cur, psql_conn)
+        create_tweet_table(args.table_name, pg_cur, psql_conn)
         print "Done creating table, now creating indices"
         create_indices(args.table_name, pg_cur, psql_conn)
         print "Done creating indices"

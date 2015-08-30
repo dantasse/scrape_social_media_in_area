@@ -55,7 +55,7 @@ def tweet_to_insert_string(tweet, table, psql_cursor):
             "lang, id, id_str, in_reply_to_screen_name, in_reply_to_status_id, " +
             "in_reply_to_status_id_str, in_reply_to_user_id, in_reply_to_user_id_str, " +
             "place, retweet_count, source, twitter_user, text, user_screen_name) " +
-            "VALUES (" + ','.join(['%s' for key in data_types]) + ")",
+            "VALUES (" + ','.join(['%s' for key in twitter_data_types]) + ")",
         (tweet['contributors'], coordinates, created_at, hstore_entities, tweet['favorite_count'],
         tweet['filter_level'], tweet['lang'], tweet['id'], tweet['id_str'],
         tweet['in_reply_to_screen_name'], tweet['in_reply_to_status_id'],
@@ -67,7 +67,7 @@ def tweet_to_insert_string(tweet, table, psql_cursor):
 
 # Map of field name -> postgres datatype. Contains everything we want to save.
 # TODO: if you change this, also change the tweet_to_insert_string method below.
-data_types = {
+twitter_data_types = {
     'contributors': 'text',
     'coordinates': 'Point',
     'created_at': 'timestamp',
@@ -100,4 +100,68 @@ def make_hstore(py_dict):
     if not py_dict:
         py_dict={}
     return {unicode(k): unicode(v) for k, v in py_dict.iteritems()}
+
+
+# Map of field name -> postgres datatype. Contains everything we want to save.
+# TODO: if you change this, also change the instagram_to_insert_string method below.
+instagram_data_types = {
+    # |attribution| dropped
+    'caption_from_username': 'text',
+    'caption_id': 'bigint',
+    'caption_text': 'text', # ignoring the rest of the caption
+    'comments_count': 'integer', # ignoring the contents of the comments
+    'created_time': 'timestamp',
+    'filter': 'text',
+    'id': 'text primary key', # copied from mongo instagram
+    'image_standard_res_url': 'text', # ignoring the rest of the image
+    'likes_count': 'integer', # ignoring who the likes are from
+    'link': 'text',
+    'location': 'Point',
+    'tags': 'text[]', # hashtags.
+    'type': 'text',
+    'instagram_user': 'hstore', # was |user| in Instagram API.
+    'user_username': 'text NOT NULL', # added this, redundant with instagram_user
+    'user_id': 'bigint', # added this, redundant with instagram_user
+    # ignoring users_in_photo
+}
+
+
+# Argument: an instagram JSON object and a collection string name to insert into.
+# Returns: a string starting with "INSERT..." that you can run to insert this
+# instagram into a Postgres database.
+def instagram_to_insert_string(instagram, collection, psql_cursor):
+    if instagram['caption'] != None:
+        caption_from_username = instagram['caption']['from']['username']
+        caption_id = int(instagram['caption']['id'])
+        caption_text = instagram['caption']['text']
+    else:
+        caption_from_username = caption_id = caption_text = None
+    comments_count = instagram['comments']['count']
+    created_time = datetime.datetime.fromtimestamp(int(instagram['created_time']))
+
+    filter = instagram['filter']
+    id = instagram['_id']
+    image_standard_res_url = instagram['images']['standard_resolution']['url']
+    likes_count = instagram['likes']['count']
+    link = instagram['link']
+
+    lat = float(instagram['location']['latitude'])
+    lon = float(instagram['location']['longitude'])
+    location = ppygis.Point(lon, lat, srid=4326)
+
+    tags = instagram['tags']
+    type = instagram['type']
+    instagram_user = make_hstore(instagram['user'])
+    user_username = instagram['user']['username']
+    user_id = int(instagram['user']['id'])
+
+    insert_str = psql_cursor.mogrify("INSERT INTO " + collection + "(caption_from_username," +
+            "caption_id, caption_text, comments_count, created_time, filter, id," +
+            "image_standard_res_url, likes_count, link, location, tags, type," +
+            "instagram_user, user_username, user_id) " +
+            "VALUES (" + ','.join(['%s' for key in instagram_data_types]) + ")", 
+        (caption_from_username, caption_id, caption_text, comments_count,
+        created_time, filter, id, image_standard_res_url, likes_count, link,
+        location, tags, type, instagram_user, user_username, user_id))
+    return insert_str
 
