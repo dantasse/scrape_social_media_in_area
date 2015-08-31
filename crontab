@@ -18,4 +18,4 @@
 # m h  dom mon dow   command
 00 00 * * * cd /home/dantasse/scrape_social_media_in_area && . env/bin/activate && ./print_table_counts.py >> /home/dantasse/pg_log.txt
 12 0-23/6 * * * cd /home/dantasse/scrape_social_media_in_area && . env/bin/activate && ./notify_if_broken.py
-00 07 * * * cd /home/dantasse/urban_analytics && ./backup.sh >> backup.log
+00 07 * * * cd /home/dantasse/scrape_social_media_in_area && ./backup.sh >> backup.log

@@ -3,7 +3,7 @@
 # Gets data from the twitter API in a given region.
 
 import argparse, random, ConfigParser, os, time, datetime, pytz, traceback, json
-import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time, utils
+import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time, utils, httplib
 from collections import defaultdict
 from twython import TwythonStreamer
 import twython.exceptions
@@ -103,7 +103,10 @@ if __name__ == '__main__':
     sleep_time = 0
     while True:
         stream = MyStreamer(OAUTH_KEYS, psql_conn, args.city)
-        stream.statuses.filter(locations=utils.CITY_LOCATIONS[args.city]['locations'])
+        try:
+            stream.statuses.filter(locations=utils.CITY_LOCATIONS[args.city]['locations'])
+        except httplib.IncompleteRead:
+            print "Incomplete Read Error, trying again."
         print "Sleeping for %d seconds." % sleep_time
         time.sleep(sleep_time)
         sleep_time += 1
