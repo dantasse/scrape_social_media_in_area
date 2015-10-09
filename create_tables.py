@@ -17,6 +17,7 @@ def create_tweet_table(table_name, pg_cur, psql_conn):
         if key not in ['coordinates']: # create that coords column separately.
             create_table_str += key + ' ' + value + ', '
     create_table_str = create_table_str[:-2] + ");"
+    # CREATE TABLE pgh311 ('contributors text, ...);
 
     pg_cur.execute(create_table_str)
     psql_conn.commit()
@@ -96,8 +97,10 @@ if __name__=='__main__':
             create_tweet_table(args.table_name, pg_cur, psql_conn)
         elif args.table_name.startswith('instagram_'):
             create_instagram_table(args.table_name, pg_cur, psql_conn)
+        elif args.table_name == 'pgh311':
+            create_tweet_table('pgh311', pg_cur, psql_conn)
         else:
-            print "We can only create tweet or instagram tables now. Doing nothing."
+            print "We can only create tweet or instagram tables now, or pgh311. Doing nothing."
             exit(1)
         print "Done creating table, now creating indices"
         create_indices(args.table_name, pg_cur, psql_conn)
