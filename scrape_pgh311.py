@@ -28,8 +28,7 @@ class MyStreamer(TwythonStreamer):
         self.oauth_keys = oauth_keys
         self.psql_connection = psql_conn
 
-        # keys_to_use_index = random.randint(0, len(oauth_keys)-1)
-        keys_to_use_index=4
+        keys_to_use_index = random.randint(0, len(oauth_keys)-1)
         print "Connecting with keys: " + str(keys_to_use_index)
         keys_to_use = oauth_keys[keys_to_use_index]
         TwythonStreamer.__init__(self,
