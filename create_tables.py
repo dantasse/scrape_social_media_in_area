@@ -99,6 +99,8 @@ if __name__=='__main__':
             create_instagram_table(args.table_name, pg_cur, psql_conn)
         elif args.table_name == 'pgh311':
             create_tweet_table('pgh311', pg_cur, psql_conn)
+        elif args.table_name == 'random_sample':
+            create_tweet_table('random_sample', pg_cur, psql_conn)
         else:
             print "We can only create tweet or instagram tables now, or pgh311. Doing nothing."
             exit(1)
