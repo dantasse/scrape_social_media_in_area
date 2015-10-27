@@ -114,4 +114,4 @@ if __name__ == '__main__':
             print "Incomplete Read Error, trying again."
         print "Sleeping for %d seconds." % sleep_time
         time.sleep(sleep_time)
-        sleep_time += 1
+        sleep_time = 5
