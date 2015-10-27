@@ -59,6 +59,7 @@ class MyStreamer(TwythonStreamer):
             print 'delete message. ignoring'
         elif message['lang'] != "en":
             print 'not english language tweet'
+            print message['text']
         else:
             # Check to make sure the point is actually in the bbox.
             if 'coordinates' not in message or message['coordinates'] == None or 'coordinates' not in message['coordinates']:
