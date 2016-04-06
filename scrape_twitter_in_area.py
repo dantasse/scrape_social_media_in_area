@@ -52,7 +52,11 @@ class MyStreamer(TwythonStreamer):
             raise Exception('Got disconnect: %s' % message['disconnect'].get('reason'))
         elif message.get('warning'):
             print 'Got warning: %s' % message['warning'].get('message')
-        elif message['coordinates'] == None:
+        elif self.city_name == 'pgh_all':
+            # tweet_pgh_all saves everything, no checks.
+            self.save_to_postgres(dict(message))
+            print 'Got tweet: %s' % message.get('text').encode('utf-8')
+        elif message['coordinates'] == None and self.city_name != 'pgh_all':
             pass # message with no actual coordinates, just a bounding box
         else:
             # Check to make sure the point is actually in the bbox.

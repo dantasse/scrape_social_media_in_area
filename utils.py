@@ -16,6 +16,7 @@ def parse_date(d):
 
 CITY_LOCATIONS = {
     'pgh':  { 'locations': '-80.2,40.241667,-79.8,40.641667' },
+    'pgh_all':  { 'locations': '-80.2,40.241667,-79.8,40.641667' },
     'sf':   { 'locations': '-122.5950,37.565,-122.295,37.865' },
     'ny':   { 'locations': '-74.03095193,40.6815699768,-73.9130315074,40.8343765254' },
     'houston': { 'locations': '-95.592778, 29.550556, -95.138056, 29.958333' },
@@ -36,8 +37,11 @@ CITY_LOCATIONS = {
 # Returns: a string starting with "INSERT..." that you can run to insert this
 # tweet into a Postgres database.
 def tweet_to_insert_string(tweet, table, psql_cursor):
-    lat = tweet['coordinates']['coordinates'][1]
-    lon = tweet['coordinates']['coordinates'][0]
+    if tweet['coordinates'] is not None:
+        lat = tweet['coordinates']['coordinates'][1]
+        lon = tweet['coordinates']['coordinates'][0]
+    else:
+        lat = lon = 0
     coordinates = ppygis.Point(lon, lat, srid=4326)
     created_at = parse_date(tweet['created_at'])
     hstore_user = make_hstore(tweet['user'])
