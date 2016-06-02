@@ -91,7 +91,7 @@ while True:
         # print "Searching around: %s, %s since %s" % (payload['lat'], payload['lng'], payload['min_timestamp'])
         r = requests.get('https://api.instagram.com/v1/media/search', params=payload)
         if r.status_code != 200:
-            time.sleep(5)
+            time.sleep(10)
             print 'Request not OK. Code: %d. Reason: %s' % (r.status_code, r.text)
             continue
 
@@ -113,14 +113,15 @@ while True:
                     psql_conn.commit()
 
                 media_seen.append(id)
-        time.sleep(5)
-        # one request every 5 sec = ~720/hr, well under 5000 rate limit
-        # and if we have 34 points, that means each one gets polled every ~170 sec
-        # (~3 min) so there's still no way we'll miss any media.
+        time.sleep(10)
+        # one request every 10 sec = ~360/hr, well under 500 rate limit
+        # (used to be 5000! now reduced to 500. I guess.)
+        # and if we have 34 points, that means each one gets polled every
+        # 340 sec (~6 min) so there's still no way we'll miss any media.
         curr_point_num = (curr_point_num + 1) % len(points)
     except Exception as e:
         print e
-        time.sleep(5)
+        time.sleep(10)
     except:
         print "some other error!"
-        time.sleep(5)
+        time.sleep(10)
