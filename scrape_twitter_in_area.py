@@ -7,6 +7,7 @@ import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time, utils, httplib
 from collections import defaultdict
 from twython import TwythonStreamer
 import twython.exceptions
+import requests
 
 config = ConfigParser.ConfigParser()
 config.read('config.txt')
@@ -75,7 +76,7 @@ class MyStreamer(TwythonStreamer):
         print data
         if status_code == 420: # "Enhance your calm" aka rate-limit
             print "Rate limit, will try again."
-            time.sleep(3)
+            time.sleep(5)
         elif status_code == 401: # "Unauthorized": maybe the IP is blocked
             # for an arbitrarily large amount of time due to too many
             # connections. 
@@ -111,6 +112,9 @@ if __name__ == '__main__':
             stream.statuses.filter(locations=utils.CITY_LOCATIONS[args.city]['locations'])
         except httplib.IncompleteRead:
             print "Incomplete Read Error, trying again."
+        except requests.exceptions.ChunkedEncodingError:
+            print "Too slow at reading, trying again"
+            # https://github.com/ryanmcgrath/twython/issues/288
         print "Sleeping for %d seconds." % sleep_time
         time.sleep(sleep_time)
         sleep_time += 1
