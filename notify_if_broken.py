@@ -80,7 +80,7 @@ def data_not_updated(data_name):
 if __name__ == '__main__':
 
     current_counts = {}
-    for db in ['tweet'] # formerly instagram and flickr too
+    for db in ['tweet']: # formerly instagram and flickr too
         cols = COLLECTIONS[db]
         for col in cols:
             # print "Counting table: " + str(col)
