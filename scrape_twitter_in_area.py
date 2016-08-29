@@ -8,6 +8,7 @@ from collections import defaultdict
 from twython import TwythonStreamer
 import twython.exceptions
 import requests
+from pprint import pprint
 
 config = ConfigParser.ConfigParser()
 config.read('config.txt')
@@ -25,10 +26,9 @@ class MyStreamer(TwythonStreamer):
     city_name = ''
     oauth_keys = {}
  
-    # c = consumer, at = access_token
     def __init__(self, oauth_keys, psql_conn, city_name):
         self.oauth_keys = oauth_keys
-        self.psql_connection = psql_conn
+        # self.psql_connection = psql_conn
         self.city_name = city_name
 
         keys_to_use_index = random.randint(0, len(oauth_keys)-1)
@@ -38,15 +38,17 @@ class MyStreamer(TwythonStreamer):
             keys_to_use['consumer_key'], keys_to_use['consumer_secret'],
             keys_to_use['access_token_key'], keys_to_use['access_token_secret'])
         
-        self.psql_cursor = self.psql_connection.cursor()
-        self.psql_table = 'tweet_' + city_name
-        psycopg2.extras.register_hstore(self.psql_connection)
+        # self.psql_cursor = self.psql_connection.cursor()
+        # self.psql_table = 'tweet_' + city_name
+        # psycopg2.extras.register_hstore(self.psql_connection)
         self.min_lon, self.min_lat, self.max_lon, self.max_lat =\
             [float(s.strip()) for s in utils.CITY_LOCATIONS[city_name]['locations'].split(',')]
 
     def on_success(self, data):
         str_data = str(data)
         message = ast.literal_eval(str_data)
+        # pprint(message['coordinates'])
+        # pprint(message['place'])
         if message.get('limit'):
             print 'Rate limiting caused us to miss %s tweets' % (message['limit'].get('track'))
         elif message.get('disconnect'):
@@ -65,8 +67,8 @@ class MyStreamer(TwythonStreamer):
             lat = message['coordinates']['coordinates'][1]
             if lon >= self.min_lon and lon <= self.max_lon and \
                     lat >= self.min_lat and lat <= self.max_lat:
-                self.save_to_postgres(dict(message))
-                print 'Got tweet: %s' % message.get('text').encode('utf-8')
+                # self.save_to_postgres(dict(message))
+                print 'Got tweet: %s %s' % (message.get('created_at'), message.get('text').encode('utf-8'))
                 # TODO save foursquare data to its own table
                 # self.save_foursquare_data_if_present(message)
 
@@ -103,11 +105,11 @@ if __name__ == '__main__':
     parser.add_argument('--city', required=True, choices=utils.CITY_LOCATIONS.keys())
     args = parser.parse_args()
 
-    psql_conn = psycopg2.connect("dbname='tweet'")
+    # psql_conn = psycopg2.connect("dbname='tweet'")
 
     sleep_time = 0
     while True:
-        stream = MyStreamer(OAUTH_KEYS, psql_conn, args.city)
+        stream = MyStreamer(OAUTH_KEYS, None, args.city)
         try:
             stream.statuses.filter(locations=utils.CITY_LOCATIONS[args.city]['locations'])
         except httplib.IncompleteRead:
