@@ -7,7 +7,7 @@ and it'll listen to the Twitter streaming endpoint for a small bounding box
 around that city (defined beforehand).
 
 `scrape_instagram_in_area.py`: the same, but for instagram. But limited to
-Pittsburgh, so far.
+Pittsburgh, so far. EDIT: as of September 2016, this won't work; they shut down the bit of the API we were using to grab instagram photos.
 
 `notify_if_broken.py`: sends an email if no data has been added to each table in
 the database in 24 hours. (run via cron.)
