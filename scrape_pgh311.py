@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Gets data from the twitter API in a given region.
+# Gets data from the twitter API that includes "pgh311". Mostly just a copy of scrape_twitter_in_area.py.
 
 import argparse, random, ConfigParser, os, time, datetime, pytz, traceback, json
 import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time, utils, httplib
