@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Gets data from the twitter API in a given region.
+# Gets a random sample of the Twitter firehose, and saves the coordinate-geotagged ones to table "random_sample". 
 
 import argparse, random, ConfigParser, os, time, datetime, pytz, traceback, json
 import psycopg2, psycopg2.extensions, psycopg2.extras, ast, time, utils, httplib
