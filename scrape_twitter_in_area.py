@@ -117,6 +117,8 @@ if __name__ == '__main__':
         except requests.exceptions.ChunkedEncodingError:
             print "Too slow at reading, trying again"
             # https://github.com/ryanmcgrath/twython/issues/288
+        except Exception:
+            print "Some other error, trying again"
         print "Sleeping for %d seconds." % sleep_time
         time.sleep(sleep_time)
         sleep_time += 1

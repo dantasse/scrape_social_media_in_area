@@ -17,7 +17,7 @@ OAUTH_KEYS = [{'client_id': config.get('foursquare-' + str(i), 'client_id'),
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--city', required=True, choices=utils.CITY_LOCATIONS.keys())
-    parser.add_argument('--output_file', default='4sq_venues.json')
+    parser.add_argument('--output_file', default='/data/temp/4sq_venues.json')
     parser.add_argument('--granularity', type=float, default=.01)
     args = parser.parse_args()
 
