@@ -31,6 +31,7 @@ CITY_LOCATIONS = {
     'sanantonio': {'locations': '-98.7, 29.21667, -98.3, 29.61667'},
     'dallas': {'locations': '-96.996667, 32.575833, -96.596667, 32.975833'},
     'whitehouse': {'locations': '-77.038, 38.8965, -77.035, 38.8985'},
+    'oakland': {'locations': '-122.35, 37.708, -122.18, 37.85'},
 }
 
 # Argument: a tweet JSON object and a table string name to insert into.
