@@ -4,7 +4,7 @@
 # businesses, not the user checkins.
 
 import argparse, random, ConfigParser, os, time, datetime, traceback, json
-import psycopg2, psycopg2.extensions, psycopg2.extras, time, utils 
+import time, utils 
 import requests, numpy as np
 
 config = ConfigParser.ConfigParser()
