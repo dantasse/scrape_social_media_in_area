@@ -57,8 +57,11 @@ class MyStreamer(TwythonStreamer):
             print 'Got warning: %s' % message['warning'].get('message')
         elif self.city_name == 'pgh_all':
             # tweet_pgh_all saves everything, no checks.
-            self.save_to_postgres(dict(message))
-            print 'Got tweet: %s' % message.get('text')
+            # self.save_to_postgres(dict(message))
+            # print 'Got tweet: %s' % message.get('text')
+            url = 'http://www.twitter.com/%s/status/%s' % (message.get('user').get('screen_name'), message.get('id'))
+            time = message.get('created_at')
+            print '%s %s %s' % (url, time, message.get('text'))
         elif message['coordinates'] == None and self.city_name != 'pgh_all':
             pass # message with no actual coordinates, just a bounding box
         else:
@@ -67,8 +70,10 @@ class MyStreamer(TwythonStreamer):
             lat = message['coordinates']['coordinates'][1]
             if lon >= self.min_lon and lon <= self.max_lon and \
                     lat >= self.min_lat and lat <= self.max_lat:
-                self.save_to_postgres(dict(message))
-                print 'Got tweet: %s %s' % (message.get('created_at'), message.get('text'))
+                # self.save_to_postgres(dict(message))
+                url = 'http://www.twitter.com/%s/status/%s' % (message.get('user').get('screen_name'), message.get('id'))
+                time = message.get('created_at')
+                print '%s %s %s' % (url, time, message.get('text'))
                 # TODO save foursquare data to its own table
                 # self.save_foursquare_data_if_present(message)
 
