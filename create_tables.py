@@ -82,7 +82,7 @@ if __name__=='__main__':
             print "Done creating table, now creating indices"
             create_indices(table_name, pg_cur, psql_conn)
             print "Done creating indices"
-        for table_name in INSTAGRAM_TABLE_NAMES:
+        for table_name in IG_TABLE_NAMES:
             print "Creating: " + str(table_name)
             create_instagram_table(table_name, pg_cur, psql_conn)
             print "Done creating table, now creating indices"
