@@ -28,8 +28,8 @@ class MyStreamer(TwythonStreamer):
  
     def __init__(self, oauth_keys, psql_conn, city_name):
         self.oauth_keys = oauth_keys
-        self.psql_connection = psql_conn
-        self.city_name = city_name
+        # self.psql_connection = psql_conn
+        # self.city_name = city_name
 
         keys_to_use_index = random.randint(0, len(oauth_keys)-1)
         print "Connecting with keys: " + str(keys_to_use_index)
@@ -38,9 +38,9 @@ class MyStreamer(TwythonStreamer):
             keys_to_use['consumer_key'], keys_to_use['consumer_secret'],
             keys_to_use['access_token_key'], keys_to_use['access_token_secret'])
         
-        self.psql_cursor = self.psql_connection.cursor()
-        self.psql_table = 'tweet_' + city_name
-        psycopg2.extras.register_hstore(self.psql_connection)
+        # self.psql_cursor = self.psql_connection.cursor()
+        # self.psql_table = 'tweet_' + city_name
+        # psycopg2.extras.register_hstore(self.psql_connection)
         self.min_lon, self.min_lat, self.max_lon, self.max_lat =\
             [float(s.strip()) for s in utils.CITY_LOCATIONS[city_name]['locations'].split(',')]
 
@@ -110,8 +110,8 @@ if __name__ == '__main__':
     parser.add_argument('--city', required=True, choices=utils.CITY_LOCATIONS.keys())
     args = parser.parse_args()
 
-    psql_conn = psycopg2.connect("dbname='tweet'")
-
+    # psql_conn = psycopg2.connect("dbname='tweet'")
+    psql_conn=None
     sleep_time = 0
     while True:
         stream = MyStreamer(OAUTH_KEYS, psql_conn, args.city)
