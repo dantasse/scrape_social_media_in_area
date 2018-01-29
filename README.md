@@ -1,6 +1,8 @@
-# scrape_social_media_in_area
+# `scrape_social_media_in_area`
 
 Tools to get tweets in a city and save them to PostgreSQL.
+
+`s3_readme.md`: Info about how to find the data we collected from this project. It's stored as gzipped json files in a public bucket on s3.
 
 `scrape_tweets_in_area.py`: the main thing. Run this with --city=(city name)
 and it'll listen to the Twitter streaming endpoint for a small bounding box
